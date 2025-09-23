@@ -1,5 +1,5 @@
-- Author: Yu-Chang Chen
-- Date created: 20250828
+- Author: Chen-Hung Peng
+- Date created: 2025-09-23
 - File Description: This the template for the proposal. Please use this template for your proposal.
 - [File link](https://docs.google.com/document/d/1cTVvHdPR0MJYz7FrR9WZS7abSe4ZAyJoXvhlM8IUgEw/edit?usp=sharing)
 - External file update log:
