@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 from datetime import datetime
+import numpy as np
 
 # 找到當前程式所在目錄
 base_dir = os.path.dirname(__file__)
@@ -55,6 +56,10 @@ for file, indicator in files.items():
     file_path = os.path.join(raw_dir, file)  # ← 這裡指定 ../raw
     df = pd.read_excel(file_path)
     df_long = pd.melt(df, id_vars=["日期"], var_name="測站", value_name=indicator)
+    
+    # 將 "-" 轉成 NaN，再轉成 float
+    df_long[indicator] = pd.to_numeric(df_long[indicator].replace("-", np.nan), errors='coerce')
+    
     all_data.append(df_long)
 
 # 合併
@@ -72,11 +77,22 @@ def convert_minguo_to_gregorian(date_str):
 merged["日期"] = merged["日期"].apply(convert_minguo_to_gregorian)
 
 # 加入縣市欄位
-
 merged["縣市"] = merged["測站"].map(station_city)
 
+
+# 重新命名欄位
+merged = merged.rename(columns={
+    "測站": "station",
+    "縣市": "city",
+    "日期": "date"
+})
+
+# 從 date 取出 year 和 month
+merged["year"] = merged["date"].dt.year
+merged["month"] = merged["date"].dt.month
+
 # 調整欄位順序
-cols = ["日期", "縣市", "測站"] + list(files.values())
+cols = ["date", "year", "month", "city", "station"] + list(files.values())
 merged = merged[cols]
 
 # 輸出 Excel，檔名加上今天日期
@@ -87,3 +103,16 @@ output_path = os.path.join(processed_dir, output_filename)
 merged.to_excel(output_path, index=False)
 
 print(f"輸出完成：{output_path}")
+
+
+
+
+
+
+
+
+
+
+
+
+
