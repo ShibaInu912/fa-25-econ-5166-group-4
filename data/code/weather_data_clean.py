@@ -97,8 +97,8 @@ merged = merged[cols]
 
 # 輸出 Excel，檔名加上今天日期
 processed_dir = os.path.join(base_dir, "..", "processed")
-today = datetime.today().strftime("%Y-%m-%d")
-output_filename = f"氣象資料_long_{today}.xlsx"
+today = datetime.today().strftime("%Y-%m-%d_%H-%M-%S")
+output_filename = f"weather_long_{today}.xlsx"
 output_path = os.path.join(processed_dir, output_filename)
 merged.to_excel(output_path, index=False)
 
