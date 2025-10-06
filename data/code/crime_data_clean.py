@@ -65,7 +65,8 @@ rename_dict = {
     "刑案總數(不含駕駛過失)": "total_crime_exclude_traffic",
     "性侵害發生件數": "sexual_assault_cases",
     "暴力犯罪發生數": "violent_crime_cases",
-    "毒品查獲件數": "drug_cases"
+    "毒品查獲件數": "drug_cases",
+    "酒駕發生件數": "alcohol_drive_cases"
 }
 
 merged = merged.rename(columns=rename_dict)
