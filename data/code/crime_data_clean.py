@@ -72,7 +72,7 @@ merged = merged.rename(columns=rename_dict)
 
 
 # 輸出 Excel
-today = datetime.today().strftime("%Y-%m-%d")
+today = datetime.today().strftime("%Y-%m-%d_%H-%M-%S")
 output_filename = f"crime_long_{today}.xlsx"
 output_path = os.path.join(processed_dir, output_filename)
 
