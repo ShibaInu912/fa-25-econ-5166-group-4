@@ -1,7 +1,7 @@
 # 資料說明
 
 - Author: 郭秉豐
-- Last Updated: 2025-09-28 21:25
+- Last Updated: 2025-10-06 14:30
 
 同步發布於Discord群組
 
