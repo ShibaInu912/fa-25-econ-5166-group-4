@@ -45,7 +45,7 @@ if list_:
     combined_df = pd.concat(list_, axis=0, ignore_index=True)
     
     # 5. Save the final combined DataFrame to a new CSV file
-    output_path = os.path.join(os.path.dirname(output_folder), output_file_name)
+    output_path = os.path.join(output_folder, output_file_name)
     combined_df.to_csv(output_path, index=False)
 
     print("-" * 30)
