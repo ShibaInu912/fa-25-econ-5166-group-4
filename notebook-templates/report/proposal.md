@@ -7,3 +7,4 @@
     - 20250923: file created
     - 20250930: proposal finished
     - 20251007: meeting 1 closed
+    - 20251014: meeting 2 closed
