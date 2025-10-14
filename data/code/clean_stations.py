@@ -22,8 +22,8 @@ print(f"Wide data loaded. Shape: {df_wide.shape}")
 print(f"Target tidy data loaded. Shape: {df_tidy.shape}")
 
 # --- Step 2: Extract Station Name and Variable from Source_File ---
-# Example: 三義1-2020-AirTemperature-month.csv -> Station: 三義1, Variable: AirTemperature
 
+# match with existed variable names
 def lookup_existed_variable(variable):
     dictionary = {
         "AirTemperature": "avg_temp",
@@ -38,10 +38,12 @@ def lookup_existed_variable(variable):
 
     return updated_variable
 
+
 def extract_info(filename):
     #"""Extracts station and variable from the Source_File name."""
     # This regex looks for the station name (anything before the first dash followed by a year),
     # and the variable name (anything between the year and '-month').
+    # Example: 三義1-2020-AirTemperature-month.csv -> Station: 三義1, Variable: AirTemperature
     match = re.search(r'(.+?)-(\d{4})-(\D+?)-month\.csv', filename)
     if match:
         station = match.group(1)
@@ -66,7 +68,7 @@ df_wide['Year'] = df_wide['Year'].astype(int)
 month_col = [str(i+1) for i in range(12)]
 
 # Use pd.melt to pivot the data
-df_long = pd.melt(
+df_long_melted = pd.melt(
     df_wide,
     id_vars= ['station_name', 'Year', 'Variable_Name'], # Columns to keep as identifiers
     value_vars= month_col,                             # Columns to pivot
@@ -74,30 +76,33 @@ df_long = pd.melt(
     value_name='Weather_Value'                                 # New column for the data values
 )
 
-print(f"\nPivoted data (df_long) shape: {df_long.shape}")
-print(df_long.head())
+print(f"\nPivoted data (df_long) shape: {df_long_melted.shape}")
+print(df_long_melted.head())
 
-output_path = os.path.join(file_path, 'temp', "melted_stations.csv")
-df_long.to_csv(output_path, index=False, encoding="utf-8-sig")
+# output_path = os.path.join(file_path, 'temp', "melted_stations.csv")
+# df_long.to_csv(output_path, index=False, encoding="utf-8-sig")
 
 
 
 # --- Step 4: Pivot the new long data WIDER (by variable) ---
 # Since your target tidy file has columns for each variable (avg_temp, avg_humidity, etc.),
 # the data we just created needs to be spread out again, but using the Variable_Name as the column header.
-# df_long_final = df_long.pivot_table(
-#     index=['station_name', 'Year', 'month'],
-#     columns='Variable_Name',
-#     values='Value',
-#     aggfunc='first' # Use 'first' since there should only be one value per cell
-# ).reset_index()
+df_long_pivoted = df_long_melted.pivot_table(
+    index=['station_name', 'Year', 'month'],
+    columns='Variable_Name',
+    values='Weather_Value',
+    aggfunc='first' # Use 'first' since there should only be one value per cell
+).reset_index()
 
 # # Clean up column names (remove the 'Variable_Name' column header)
-# df_long_final.columns.name = None
-# df_long_final = df_long_final.rename(columns={'Year': 'year'})
+df_long_pivoted.columns.name = None
+df_long_pivoted = df_long_pivoted.rename(columns={'Year': 'year'})
 
-# print(f"\nFinal Tidy Wide-Variable data (df_long_final) shape: {df_long_final.shape}")
-# print(df_long_final.head())
+print(f"\nFinal Tidy Wide-Variable data (df_long_final) shape: {df_long_pivoted.shape}")
+print(df_long_pivoted.head())
+
+output_path = os.path.join(file_path, 'temp', "pivoted_stations.csv")
+df_long_pivoted.to_csv(output_path, index=False, encoding="utf-8-sig")
 
 
 # # --- Step 5: Merge with the Target Tidy File ---
