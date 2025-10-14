@@ -14,7 +14,7 @@ all_files = glob.glob(os.path.join(csv_directory, file_pattern))
 
 # Check if any files were found
 if not all_files:
-    print(f"⚠️ No files found in: {csv_directory} matching pattern: {file_pattern}")
+    print(f"No files found in: {csv_directory} matching pattern: {file_pattern}")
     exit()
 
 # List to hold individual DataFrames
@@ -46,7 +46,7 @@ if list_:
     
     # 5. Save the final combined DataFrame to a new CSV file
     output_path = os.path.join(output_folder, output_file_name)
-    combined_df.to_csv(output_path, index=False)
+    combined_df.to_csv(output_path, index=False, encoding="utf-8-sig")
 
     print("-" * 30)
     print(f"Combination complete!")
