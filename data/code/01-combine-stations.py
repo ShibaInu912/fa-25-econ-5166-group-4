@@ -2,19 +2,20 @@ import pandas as pd
 import glob
 import os
 
-csv_directory = 'C:/Users/Luca/Desktop/Course/03_Data_Science_and_Social_Inquiry/04_Final_Project/fa-25-econ-5166-group-4/data/raw/stations'
+file_path = 'C:/Users/Luca/Desktop/Course/03_Data_Science_and_Social_Inquiry/04_Final_Project/02_data'
+input_folder = '00_raw/stations'
 file_pattern = '*.csv'
 
-output_folder = 'C:/Users/Luca/Desktop/Course/03_Data_Science_and_Social_Inquiry/04_Final_Project/fa-25-econ-5166-group-4/data/temp'
-output_file_name = 'combined_stations_long.csv'
+output_folder = '01_temp/'
+output_filename = '01_combined_stations_long.csv'
 
 
 # 1. Get a list of all CSV files
-all_files = glob.glob(os.path.join(csv_directory, file_pattern))
+all_files = glob.glob(os.path.join(file_path, input_folder, file_pattern))
 
 # Check if any files were found
 if not all_files:
-    print(f"No files found in: {csv_directory} matching pattern: {file_pattern}")
+    print(f"No files found in: {file_path} matching pattern: {file_pattern}")
     exit()
 
 # List to hold individual DataFrames
@@ -45,7 +46,7 @@ if list_:
     combined_df = pd.concat(list_, axis=0, ignore_index=True)
     
     # 5. Save the final combined DataFrame to a new CSV file
-    output_path = os.path.join(output_folder, output_file_name)
+    output_path = os.path.join(file_path, output_folder, output_filename)
     combined_df.to_csv(output_path, index=False, encoding="utf-8-sig")
 
     print("-" * 30)
