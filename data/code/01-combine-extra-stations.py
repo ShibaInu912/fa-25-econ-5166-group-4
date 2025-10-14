@@ -7,7 +7,7 @@ input_folder = '00_raw/stations'
 file_pattern = '*.csv'
 
 output_folder = '01_temp/'
-output_filename = '01_combined_stations_long.csv'
+output_filename = '01-combined-extra-stations.csv'
 
 
 # 1. Get a list of all CSV files
@@ -43,8 +43,9 @@ for filename in all_files:
 
 # 4. Concatenate all DataFrames in the list
 if list_:
-    combined_df = pd.concat(list_, axis=0, ignore_index=True)
-    
+    combined_df = pd.concat(list_, axis= 0, ignore_index= True)
+    combined_df.rename(columns={"年/月": "Year"}, inplace= True)
+
     # 5. Save the final combined DataFrame to a new CSV file
     output_path = os.path.join(file_path, output_folder, output_filename)
     combined_df.to_csv(output_path, index=False, encoding="utf-8-sig")
