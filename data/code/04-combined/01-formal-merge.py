@@ -13,19 +13,42 @@ import itertools
 PATH = "/Users/windkuo1017/Desktop/NTU_local/fa-25-econ-5166-group-4/data/code/04-combined"
 
 # 是否要檢測天氣資料重複值
-is_check_weather_duplicates = False
+is_check_weather_duplicates = True
 
 # 是否要檢攝天氣資料缺值
-is_check_weather_missing = False
+is_check_weather_missing = True
 
 # 是否輸出天氣資料
-is_output_weather = False
+is_output_weather = True
 
 # 匯出天氣+犯罪
-is_output_weather_crime = False
+is_output_weather_crime = True
 
 # 匯出天氣+犯罪+人口
 is_output_weather_crime_pop = True
+
+
+
+df_weather1 = pd.read_excel(PATH+"/01a-weather-big-station-only.xlsx")
+df_weather2 = pd.read_csv(PATH+"/01b-pivoted_stations.csv")
+
+#  匯入 crime 資料
+crime_cols = [
+    'date', 
+    'city',
+    'theft_cases',
+    'traffic_accident_cases',
+    'alcohol_drive_cases',
+    'general_injury_cases',
+    'total_crime_exclude_traffic',
+    'sexual_assault_cases',
+    'violent_crime_cases',
+    'drug_cases'
+]
+df_crime = pd.read_excel(PATH+"/02-crime.xlsx", usecols=crime_cols)
+
+pop_cols = ['date', 'city', 'pop']
+df_pop = pd.read_csv(PATH+"/03-population.csv", usecols=pop_cols)
 
 # ====================================================================================================================
 
@@ -34,8 +57,8 @@ city_station_dict = {
     "新北市": ["板橋","新北"],
     "臺北市": ["臺北"],
     "桃園市": ["新屋","新屋1","新屋2","新屋3"],
+    "新竹地區": ["新竹"],
     "新竹市": ["新竹"],
-    "新竹縣": ["新竹"],
     "宜蘭縣": ["宜蘭"],
     "苗栗縣": ["三義","三義1","三義2"],
     "臺中市": ["臺中"],
@@ -54,8 +77,7 @@ city_station_dict = {
     "連江縣": ["馬祖"]
 }
 
-df_weather1 = pd.read_excel(PATH+"/01a-weather-big-station-only.xlsx")
-df_weather2 = pd.read_csv(PATH+"/01b-pivoted_stations.csv")
+
 
 # 統一欄位名稱
 df_weather2 = df_weather2.rename(columns={"station_name": "station"})
@@ -67,6 +89,11 @@ for col in ["date", "city"]:
 
 # 重新排序欄位，與 df_weather1 一致
 df_weather2 = df_weather2[df_weather1.columns]
+
+df_weather1['city'] = df_weather1['city'].replace({
+    '新竹市': '新竹地區',
+    '新竹縣': '新竹地區'
+})
 
 # station -> city 反向查表
 station_to_city = {s: c for c, stations in city_station_dict.items() for s in stations}
@@ -118,6 +145,7 @@ df_weather.insert(3, 'city_code', col) # 插入到 index 3，也就是第四欄
 # -----------------------------
 # 檢查
 # 找出重複的組合
+
 
 if(is_check_weather_duplicates):
     duplicates = df_weather[df_weather.duplicated(subset=['year', 'month', 'city_code'], keep=False)]
@@ -184,22 +212,6 @@ if(is_check_weather_missing):
 # ===========================================================================================
 # 【二、合併犯罪資料】
 
-#  匯入 crime 資料
-crime_cols = [
-    'date', 
-    'city',
-    'theft_cases',
-    'traffic_accident_cases',
-    'alcohol_drive_cases',
-    'general_injury_cases',
-    'total_crime_exclude_traffic',
-    'sexual_assault_cases',
-    'violent_crime_cases',
-    'drug_cases'
-]
-
-df_crime = pd.read_excel(PATH+"/02-crime.xlsx", usecols=crime_cols)
-
 # df_weather['date'] = pd.to_datetime(df_weather['date'])
 # df_crime['date'] = pd.to_datetime(df_crime['date'])
 # df_weather['city'] = df_weather['city'].str.strip()
@@ -234,6 +246,22 @@ print("df_crime date dtype:", df_crime['date'].dtype)
 # print(df_weather.head())
 # print(df_crime.head())
 
+
+# 處理新竹問題
+def normalize_city(city):
+    if city in ['新竹市', '新竹縣']:
+        return '新竹地區'
+    else:
+        return city
+    
+df_crime['city'] = df_crime['city'].apply(normalize_city)
+
+df_crime = (
+    df_crime
+    .groupby(['date', 'city'], as_index=False)
+    .sum(numeric_only=True)
+)
+
 # 合併 weather + crime
 df_merged = pd.merge(
     df_weather,
@@ -252,8 +280,12 @@ if(is_output_weather_crime):
 # ===========================================================================================
 # 【三、合併人口資料】
 
-pop_cols = ['date', 'city', 'pop']
-df_pop = pd.read_csv(PATH+"/03-population.csv", usecols=pop_cols)
+df_pop['city'] = df_pop['city'].apply(normalize_city)
+df_pop = (
+    df_pop
+    .groupby(['date', 'city'], as_index=False)
+    .sum(numeric_only=True)
+)
 
 # ----------------------------
 # 合併
@@ -265,6 +297,9 @@ df_merged = pd.merge(
     on=['date', 'city']
 )
 
+
+# --------------------------------
+# 調整欄位
 # 先把 pop 欄拿出來
 col_pop = df_merged.pop('pop')
 
