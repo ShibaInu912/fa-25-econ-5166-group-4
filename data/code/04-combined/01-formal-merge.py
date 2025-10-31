@@ -10,7 +10,8 @@ import itertools
 # 【主控台】
 
 # 檔案路徑
-PATH = "/Users/windkuo1017/Desktop/NTU_local/fa-25-econ-5166-group-4/data/code/04-combined"
+PATH = "/Users/windkuo1017/Desktop/NTU_local/fa-25-econ-5166-group-4/data/raw"
+OUTPUT_PATH = "/Users/windkuo1017/Desktop/NTU_local/fa-25-econ-5166-group-4/data/processed"
 
 # 是否要檢測天氣資料重複值
 is_check_weather_duplicates = True
@@ -175,7 +176,7 @@ df_weather = df_weather.reset_index(drop=True)
 
 if(is_output_weather):
     # 輸出
-    df_weather.to_csv(PATH+"/01c-merged-weather-clean.csv", index=False, encoding="utf-8-sig")
+    df_weather.to_csv(OUTPUT_PATH+"/01c-merged-weather-clean.csv", index=False, encoding="utf-8-sig")
 
     print("合併完成，資料已輸出")
 
@@ -273,7 +274,7 @@ df_merged = pd.merge(
 
 if(is_output_weather_crime):
     # 輸出
-    df_merged.to_csv(PATH+"/02z-merged-weather-crime.csv", index=False, encoding="utf-8-sig")
+    df_merged.to_csv(OUTPUT_PATH+"/02z-merged-weather-crime.csv", index=False, encoding="utf-8-sig")
 
     print("02：合併完成，資料已輸出")
 
@@ -309,7 +310,7 @@ df_merged.insert(6, 'pop', col_pop)
 
 if(is_output_weather_crime_pop):
     # 輸出
-    df_merged.to_csv(PATH+"/04-weather-crime-pop.csv", index=False, encoding="utf-8-sig")
+    df_merged.to_csv(OUTPUT_PATH+"/04-weather-crime-pop.csv", index=False, encoding="utf-8-sig")
 
     print("03：合併完成，資料已輸出")
 
