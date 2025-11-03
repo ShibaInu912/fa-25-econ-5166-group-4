@@ -48,8 +48,8 @@ crime_cols = [
 ]
 df_crime = pd.read_excel(PATH+"/02-crime.xlsx", usecols=crime_cols)
 
-pop_cols = ['date', 'city', 'pop']
-df_pop = pd.read_csv(PATH+"/03-population.csv", usecols=pop_cols)
+pop_cols = ['date', 'city', 'pop_total', 'pop_0-14','pop_15-64','pop_65up']
+df_pop = pd.read_csv(PATH+"/03-population-new.csv", usecols=pop_cols)
 
 # ====================================================================================================================
 
@@ -302,10 +302,17 @@ df_merged = pd.merge(
 # --------------------------------
 # 調整欄位
 # 先把 pop 欄拿出來
-col_pop = df_merged.pop('pop')
+# col_pop1 = df_merged.pop('pop')
+# # 插入到第7欄（index 6）
+# df_merged.insert(6, 'pop', col_pop1)
 
-# 插入到第7欄（index 6）
-df_merged.insert(6, 'pop', col_pop)
+pop_cols = ['pop_total','pop_0-14','pop_15-64','pop_65up']
+
+
+for i in range(6, 6 + len(pop_cols)):
+    col = df_merged.pop(pop_cols[i - 6])
+    df_merged.insert(i, pop_cols[i - 6], col)
+    i += 1
 
 
 if(is_output_weather_crime_pop):
