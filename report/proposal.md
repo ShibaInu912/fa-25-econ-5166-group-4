@@ -3,6 +3,7 @@
 - File Description: 
 - [File link of proposal](url) (https://docs.google.com/document/d/1o3wtjsdR6fYVHuHq85u844_JHJtBIbKJXC4OIgfsX5Q/edit?tab=t.0)
 - [File link of meeting note template](url) (https://docs.google.com/document/d/1qtwsd9OrGthxMD2E8Heom4WkWe3ruePlmwNU0pAN4-o/edit?tab=t.0)
+- [File link of DA meeting note](https://docs.google.com/document/d/10HvluN-hwTB_sSwgTFRDHWBQj7liqx15QduO0RlJ6D0/edit?usp=sharing)
 - External file update log:
     - 20250923: file created
     - 20250930: proposal finished
