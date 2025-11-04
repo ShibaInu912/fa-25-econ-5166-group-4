@@ -5,12 +5,12 @@ import os
 
 file_path = 'C:/Users/Luca/Desktop/Course/03_Data_Science_and_Social_Inquiry/04_Final_Project/02_data'
 intput_folder = '01_temp/'
-input_file = '01-combined-extra-stations.csv'
+input_file = '01-combined-extra-stations-1104.csv'
 
 output_folder = intput_folder
-output_filename = '02-weather-existed-and-extra-stations.csv'
+output_filename = '02-weather-existed-and-extra-stations-1104.csv'
 
-tidy_file = '02_Weather.xlsx'           
+# tidy_file = '02_Weather.xlsx'           
 # output_merged_file = 'weather_merged_stations.csv'
 # ---------------------
 
@@ -19,10 +19,10 @@ tidy_file = '02_Weather.xlsx'
 df_wide = pd.read_csv(os.path.join(file_path, intput_folder, input_file))
 
 # Load the target tidy data
-df_tidy = pd.read_excel(os.path.join(file_path, '02_processed',tidy_file))
+# df_tidy = pd.read_excel(os.path.join(file_path, '02_processed',tidy_file))
 
 print(f"Wide data loaded. Shape: {df_wide.shape}")
-print(f"Target tidy data loaded. Shape: {df_tidy.shape}")
+# print(f"Target tidy data loaded. Shape: {df_tidy.shape}")
 
 # --- Step 2: Extract Station Name and Variable from Source_File ---
 
@@ -47,11 +47,11 @@ def extract_info(filename):
     # This regex looks for the station name (anything before the first dash followed by a year),
     # and the variable name (anything between the year and '-month').
     # Example: 三義1-2020-AirTemperature-month.csv -> Station: 三義1, Variable: AirTemperature
-    match = re.search(r'(.+?)-(\d{4})-(\D+?)-month\.csv', filename)
+    match = re.search(r'(.+?)-(\d)-(\D+?)-month\.csv', filename)
     if match:
         station = match.group(1)
-        if(station[-1].isnumeric()):
-            station = station[0:-1]
+        # if(station[-1].isnumeric()):
+        #     station = station[0:-1]
 
         variable = match.group(3)
         variable = lookup_existed_variable(variable)
@@ -109,8 +109,8 @@ df_long_pivoted = df_long_pivoted.rename(columns={'Year': 'year'})
 print(f"\nFinal Tidy Wide-Variable data (df_long_final) shape: {df_long_pivoted.shape}")
 print(df_long_pivoted.head())
 
-# output_path = os.path.join(file_path, output_folder, "02b-pivoted-stations.csv")
-# df_long_pivoted.to_csv(output_path, index=False, encoding="utf-8-sig")
+output_path = os.path.join(file_path, output_folder, "02b-pivoted-stations-1104.csv")
+df_long_pivoted.to_csv(output_path, index=False, encoding="utf-8-sig")
 
 '''
 

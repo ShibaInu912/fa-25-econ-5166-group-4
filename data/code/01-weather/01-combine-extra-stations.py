@@ -3,11 +3,11 @@ import glob
 import os
 
 file_path = 'C:/Users/Luca/Desktop/Course/03_Data_Science_and_Social_Inquiry/04_Final_Project/02_data'
-input_folder = '00_raw/stations'
+input_folder = '00_raw/01-weather/stations-1104'
 file_pattern = '*.csv'
 
 output_folder = '01_temp/'
-output_filename = '01-combined-extra-stations.csv'
+output_filename = '01-combined-extra-stations-1104.csv'
 
 
 # 1. Get a list of all CSV files
