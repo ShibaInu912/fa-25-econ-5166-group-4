@@ -1,3 +1,11 @@
+"""
+Update Log:
+- 2025-10-31: Created the initial version of the script to merge weather, crime, and population data.
+- 2025-11-06: Change weather stations. Add "df_weather_3". Use new data in this file.
+
+"""
+
+
 import pandas as pd
 import numpy as np
 from pathlib import Path
@@ -28,10 +36,9 @@ is_output_weather_crime = True
 # 匯出天氣+犯罪+人口
 is_output_weather_crime_pop = True
 
-
-
 df_weather1 = pd.read_excel(PATH+"/01a-weather-big-station-only.xlsx")
 df_weather2 = pd.read_csv(PATH+"/01b-pivoted_stations.csv")
+df_weather3 = pd.read_csv(PATH+"/01g-pivoted-stations-1104.csv")
 
 #  匯入 crime 資料
 crime_cols = [
@@ -48,8 +55,11 @@ crime_cols = [
 ]
 df_crime = pd.read_excel(PATH+"/02-crime.xlsx", usecols=crime_cols)
 
+# 匯入 Population 資料
 pop_cols = ['date', 'city', 'pop_total', 'pop_0-14','pop_15-64','pop_65up']
 df_pop = pd.read_csv(PATH+"/03-population-new.csv", usecols=pop_cols)
+
+df_pop_density = pd.read_excel(PATH+"/04-pop_density.xlsx")
 
 # ====================================================================================================================
 
@@ -57,17 +67,22 @@ city_station_dict = {
     "基隆市": ["基隆"],
     "新北市": ["板橋","新北"],
     "臺北市": ["臺北"],
-    "桃園市": ["新屋","新屋1","新屋2","新屋3"],
+    # "桃園市": ["新屋","新屋1","新屋2","新屋3"],
+    "桃園市": ["茶改場"],
     "新竹地區": ["新竹"],
     "新竹市": ["新竹"],
     "宜蘭縣": ["宜蘭"],
-    "苗栗縣": ["三義","三義1","三義2"],
+    # "苗栗縣": ["三義","三義1","三義2"],
+    "苗栗縣": ["苗栗農改場"],
     "臺中市": ["臺中"],
-    "彰化縣": ["員林"],
+    # "彰化縣": ["員林"],
+    "彰化縣": ["臺中農改場"],
     "南投縣": ["日月潭"],
-    "雲林縣": ["虎尾"],
+    # "雲林縣": ["虎尾"],
+    "雲林縣": ["南改斗南分場"],
     "嘉義市": ["嘉義"],
-    "嘉義縣": ["奮起湖"],
+    # "嘉義縣": ["奮起湖"],
+    "嘉義縣": ["南改義竹分場"],
     "臺南市": ["臺南"],
     "高雄市": ["高雄"],
     "屏東縣": ["恆春"],
@@ -82,14 +97,17 @@ city_station_dict = {
 
 # 統一欄位名稱
 df_weather2 = df_weather2.rename(columns={"station_name": "station"})
+df_weather3 = df_weather3.rename(columns={"station_name": "station"})
 
 # 新增缺少欄位讓兩個表格一致
 for col in ["date", "city"]:
     if col not in df_weather2.columns:
         df_weather2[col] = pd.NA
+        df_weather3[col] = pd.NA
 
 # 重新排序欄位，與 df_weather1 一致
 df_weather2 = df_weather2[df_weather1.columns]
+df_weather3 = df_weather3[df_weather1.columns]
 
 df_weather1['city'] = df_weather1['city'].replace({
     '新竹市': '新竹地區',
@@ -100,16 +118,18 @@ df_weather1['city'] = df_weather1['city'].replace({
 station_to_city = {s: c for c, stations in city_station_dict.items() for s in stations}
 
 df_weather2["city"] = df_weather2["station"].map(station_to_city)
+df_weather3["city"] = df_weather3["station"].map(station_to_city)
 
 # 合併
-df_weather = pd.concat([df_weather1, df_weather2], ignore_index=True)
+# df_weather = pd.concat([df_weather1, df_weather2], ignore_index=True)
+df_weather = pd.concat([df_weather1, df_weather2, df_weather3], ignore_index=True)
 
 # -----------------------------
 # Step 1：用 year + month 生成 date（每月第一天）
 df_weather['date'] = pd.to_datetime(df_weather[['year', 'month']].assign(day=1))
 
 # Step 2：把 ["--", "X", ""] 轉成缺失值
-df_weather.replace(["--", "X", ""], np.nan, inplace=True)
+df_weather.replace(["--", "X"], np.nan, inplace=True)
 
 # Step 3（可選）：把數值型欄位轉成 float
 num_cols = ['sunshine_hours', 'avg_humidity', 'avg_temp', 'rainy_days', 'precipitation']
@@ -144,6 +164,26 @@ col = df_weather.pop('city_code')      # 先把 city_code 拿出來
 df_weather.insert(3, 'city_code', col) # 插入到 index 3，也就是第四欄
 
 # -----------------------------
+# 1106：我們發現某些縣市之所有有缺失值，是因為不知道為什麼把0變成missing
+target_cities = [
+    '嘉義市', '南投縣', '基隆市', '宜蘭縣', '屏東縣', '新北市',
+    '新竹地區', '澎湖縣', '臺中市', '臺北市', '臺南市', '連江縣',
+    '金門縣', '高雄市'
+]
+
+target_columns = ['rainy_days', 'precipitation']
+
+# 步驟 A: 建立一個「布林遮罩 (boolean mask)」，找出 city 欄位符合清單的 "列"
+cond_city = df_weather['city'].isin(target_cities)
+
+# 步驟 B: 使用 .loc 選擇器，精確地只選取
+# <符合條件的列, 符合條件的欄>
+# 然後只對這個選取範圍執行 fillna(0)
+# 最後將結果賦值回原本的 DataFrame
+df_weather.loc[cond_city, target_columns] = df_weather.loc[cond_city, target_columns].fillna(0)
+
+# -----------------------------
+ 
 # 檢查
 # 找出重複的組合
 
@@ -298,6 +338,11 @@ df_merged = pd.merge(
     on=['date', 'city']
 )
 
+df_merged = pd.merge(
+    df_merged,
+    df_pop_density,
+    on=['date', 'city']
+)
 
 # --------------------------------
 # 調整欄位
@@ -306,7 +351,7 @@ df_merged = pd.merge(
 # # 插入到第7欄（index 6）
 # df_merged.insert(6, 'pop', col_pop1)
 
-pop_cols = ['pop_total','pop_0-14','pop_15-64','pop_65up']
+pop_cols = ['pop_total','pop_0-14','pop_15-64','pop_65up','pop_density']
 
 
 for i in range(6, 6 + len(pop_cols)):
