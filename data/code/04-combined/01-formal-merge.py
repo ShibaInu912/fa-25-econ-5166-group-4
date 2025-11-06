@@ -59,7 +59,8 @@ df_crime = pd.read_excel(PATH+"/02-crime.xlsx", usecols=crime_cols)
 pop_cols = ['date', 'city', 'pop_total', 'pop_0-14','pop_15-64','pop_65up']
 df_pop = pd.read_csv(PATH+"/03-population-new.csv", usecols=pop_cols)
 
-df_pop_density = pd.read_excel(PATH+"/04-pop_density.xlsx")
+pop_d_cols = ['date', 'city', 'pop_density']
+df_pop_density = pd.read_excel(PATH+"/04-pop_density.xlsx", usecols=pop_d_cols)
 
 # ====================================================================================================================
 
