@@ -2,7 +2,7 @@
 Update Log:
 - 2025-10-31: Created the initial version of the script to merge weather, crime, and population data.
 - 2025-11-06: Change weather stations. Add "df_weather_3". Use new data in this file.
-
+- 2025-11-11: Add coordinate of each city.
 """
 
 
@@ -35,6 +35,9 @@ is_output_weather_crime = True
 
 # 匯出天氣+犯罪+人口
 is_output_weather_crime_pop = True
+
+# 匯出天氣+犯罪+人口+座標
+is_output_weather_crime_pop_coord = True
 
 df_weather1 = pd.read_excel(PATH+"/01a-weather-big-station-only.xlsx")
 df_weather2 = pd.read_csv(PATH+"/01b-pivoted_stations.csv")
@@ -366,6 +369,82 @@ if(is_output_weather_crime_pop):
     df_merged.to_csv(OUTPUT_PATH+"/04-weather-crime-pop.csv", index=False, encoding="utf-8-sig")
 
     print("03：合併完成，資料已輸出")
+
+
+# ===========================================================================================
+# 【四、合併經緯度資料】
+
+# 1. 建立您提供的經緯度資料
+coordinate_data = [
+    ('基隆市', 25.131689, 121.744561),
+    ('臺北市', 25.037523, 121.563784),
+    ('新北市', 25.012702, 121.466052),
+    ('桃園市', 24.993249, 121.301030),
+    ('新竹地區', 24.806786, 120.968934), 
+    ('苗栗縣', 24.564775, 120.820720),
+    ('臺中市', 24.161911, 120.646889),
+    ('彰化縣', 24.075402, 120.544706),
+    ('南投縣', 23.902669, 120.690210),
+    ('雲林縣', 23.698926, 120.526339),
+    ('嘉義縣', 23.458933, 120.292931),
+    ('嘉義市', 23.481193, 120.453566),
+    ('臺南市', 22.992360, 120.185151),
+    ('高雄市', 22.621200, 120.311776),
+    ('屏東縣', 22.683025, 120.487953),
+    ('宜蘭縣', 24.730607, 121.762714),
+    ('花蓮縣', 23.991382, 121.619808),
+    ('臺東縣', 22.755565, 121.150334),
+    ('澎湖縣', 23.570069, 119.566469),
+    ('金門縣', 24.437151, 118.319117),
+    ('連江縣', 26.157846, 119.951955)
+]
+
+# 2. 轉換為 DataFrame
+df_coordinates = pd.DataFrame(coordinate_data, columns=['city', 'latitude', 'longitude'])
+
+# 3. 處理 '新竹地區' 鍵值
+#    為了能和 df_merged (已使用 normalize_city 處理過) 成功合併，
+#    我們必須將經緯度表中的 '新竹市' 改為 '新竹地區'
+# df_coordinates['city'] = df_coordinates['city'].replace('新竹市', '新竹地區')
+
+# 4. 將經緯度合併到主資料表
+#    (此時的 df_merged 應已包含 weather, crime, pop, pop_density)
+df_merged = pd.merge(
+    df_merged,
+    df_coordinates,
+    on='city',
+    how='left'
+)
+
+print("✅ 04：經緯度資料合併完成")
+
+# 5. (可選) 調整欄位順序，將經緯度放到 'city_code' 後面
+if 'latitude' in df_merged.columns and 'longitude' in df_merged.columns:
+    # 先取出欄位
+    col_lat = df_merged.pop('latitude')
+    col_lon = df_merged.pop('longitude')
+    
+    # 找到 'city_code' 欄位的位置
+    try:
+        city_code_index = df_merged.columns.get_loc('city_code')
+        
+        # 插入到 'city_code' 之後 (索引值 + 1)
+        df_merged.insert(city_code_index + 1, 'longitude', col_lon)
+        df_merged.insert(city_code_index + 1, 'latitude', col_lat)
+        
+        print("欄位順序已調整 (latitude, longitude 已移至 city_code 之後)")
+    except KeyError:
+        print("⚠️ 找不到 'city_code' 欄位，經緯度欄位將保留在最後。")
+
+# ===========================================================================================
+
+
+if(is_output_weather_crime_pop_coord):
+    # 輸出
+    df_merged.to_csv(OUTPUT_PATH+"/05-weather-crime-pop-coord.csv", index=False, encoding="utf-8-sig")
+
+    print("04：合併完成，資料已輸出")
+
 
 # print(df_weather['date'].dtype)
 # print(df_crime['date'].dtype)
