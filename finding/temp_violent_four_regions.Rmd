@@ -1,0 +1,243 @@
+---
+title: "Temperature–Violent Crime Relationship (Four Representative Cities)"
+subtitle: "Taipei, Taichung, Kaohsiung, and Hualien (2002–2024)"
+author: "Your Team"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    number_sections: true
+    theme: cosmo
+    code_folding: show
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6,
+  fig.align = "center", fig.retina = 2
+)
+library(tidyverse)
+library(lubridate)
+library(scales)
+library(broom)
+suppressPackageStartupMessages({
+  library(lmtest)
+  library(sandwich)
+})
+cb_pal <- c("#1b9e77","#d95f02","#7570b3","#e7298a","#66a61e","#e6ab02","#a6761d","#666666")
+```
+
+# 0. Load & Filter for Four Representative Cities
+
+```{r load}
+raw <- readr::read_csv("04-weather-crime-pop.csv", show_col_types = FALSE)
+dat0 <- raw %>% janitor::clean_names()
+
+dat <- dat0 %>%
+  mutate(
+    year  = as.integer(year),
+    month = as.integer(month),
+    date  = make_date(year, month, 1)
+  ) %>%
+  filter(!is.na(date), between(year, 2002, 2024), between(month, 1, 12))
+
+# population column
+pop_col <- intersect(names(dat0), c("population","pop","pop_total","total_population","人口數","居民人口數"))
+if (length(pop_col) == 0) stop("Population column not found. Please check your dataset.")
+dat <- dat %>% mutate(pop_used = .data[[pop_col[1]]])
+
+# violent crime rate
+dat <- dat %>%
+  mutate(
+    violent_crime_rate = ifelse(!is.na(pop_used) & pop_used > 0,
+                                violent_crime_cases / pop_used * 1e5, NA_real_)
+  )
+
+# filter four representative regions
+dat_reps <- dat %>%
+  filter(city %in% c("台北市","臺北市","新北市","台中市","臺中市","高雄市","花蓮縣")) %>%
+  mutate(region = case_when(
+    str_detect(city, "北") ~ "Taipei (North)",
+    str_detect(city, "中") ~ "Taichung (Central)",
+    str_detect(city, "高") ~ "Kaohsiung (South)",
+    str_detect(city, "花蓮") ~ "Hualien (East)",
+    TRUE ~ city
+  ))
+```
+
+---
+
+# 1️⃣ Scatter + LOESS (Temperature vs Violent Crime Rate)
+
+```{r scatter-loess}
+ggplot(dat_reps, aes(x = avg_temp, y = violent_crime_rate, color = region)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "loess", se = TRUE, linewidth = 1.0) +
+  scale_color_manual(values = cb_pal[1:4]) +
+  scale_y_continuous(breaks = pretty_breaks(), limits = c(0, NA)) +
+  labs(title = "Average Temperature vs Violent Crime Rate (Four Regions)",
+       subtitle = "Each point = monthly data (2002–2024)",
+       x = "Average Temperature (°C)",
+       y = "Violent Crime Rate (per 100k)",
+       color = "Region") +
+  theme_minimal(base_size = 14)
+```
+
+---
+
+# 2️⃣ Facet Comparison by Region
+
+```{r facets}
+p_facets <- dat_reps %>%
+  ggplot(aes(x = avg_temp, y = violent_crime_rate)) +
+  geom_point(alpha = 0.35, color = cb_pal[2]) +
+  geom_smooth(method = "loess", se = FALSE, color = cb_pal[2]) +
+  facet_wrap(~ region, scales = "free_y") +
+  scale_y_continuous(breaks = pretty_breaks(), limits = c(0, NA)) +
+  labs(title = "Temperature vs Violent Crime Rate (Facet by Region)",
+       x = "Average Temperature (°C)", y = "Violent Crime Rate (per 100k)") +
+  theme_minimal(base_size = 12)
+p_facets
+```
+
+---
+
+# 3️⃣ Partial Residuals (Fixed Effects Model, 22 Cities Only)
+
+```{r partial-residuals}
+# 3️⃣ Partial Residuals (Fixed Effects Model, 22 Cities)
+# ======================================================
+
+# 建立固定效果模型：控制 city / year / month
+fe_model_all <- lm(
+  violent_crime_rate ~ avg_temp + rainy_days + sunshine_hours + avg_humidity +
+    factor(city) + factor(year) + factor(month),
+  data = dat
+)
+
+# 取出溫度係數
+b_temp_all <- coef(fe_model_all)[["avg_temp"]]
+
+# 建立部分殘差資料
+pr_all <- tibble(
+  avg_temp = dat$avg_temp,
+  partial_resid = resid(fe_model_all) + b_temp_all * dat$avg_temp,
+  city = dat$city
+) %>% filter(is.finite(avg_temp), is.finite(partial_resid))
+
+# 畫出部分殘差圖（顏色分縣市）
+ggplot(pr_all, aes(x = avg_temp, y = partial_resid, color = city)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", se = TRUE, color = "black", linewidth = 1.1) +
+  scale_y_continuous(breaks = pretty_breaks()) +
+  labs(
+    title = "Partial Residuals vs Average Temperature (Fixed Effects Model, 22 Cities)",
+    subtitle = "Each point represents a city-month observation (2002–2024)\nControls: city, year, and month fixed effects + other weather covariates",
+    x = "Average Temperature (°C)",
+    y = "Partial Residuals of Violent Crime Rate",
+    color = "City"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "none")
+
+```
+
+---
+
+# 4️⃣ Dual-axis Time Series (Each Region Separately)
+
+```{r dual-axis}
+plot_dualaxis <- function(region_name){
+  d <- dat_reps %>% filter(region == region_name) %>%
+    group_by(date) %>%
+    summarise(avg_temp = mean(avg_temp, na.rm = TRUE),
+              violent_rate = mean(violent_crime_rate, na.rm = TRUE), .groups = "drop")
+
+  y_max  <- max(d$avg_temp, na.rm = TRUE); if (!is.finite(y_max) || y_max == 0) y_max <- 1
+  cr_max <- max(d$violent_rate, na.rm = TRUE); if (!is.finite(cr_max) || cr_max == 0) cr_max <- 1
+
+  ggplot(d, aes(x = date)) +
+    geom_line(aes(y = avg_temp, color = "Average Temperature (°C)"), linewidth = 1) +
+    geom_line(aes(y = violent_rate / cr_max * y_max,
+                  color = "Violent Crime Rate (per 100k)"), linewidth = 1.1) +
+    scale_y_continuous(
+      name = "Average Temperature (°C)",
+      sec.axis = sec_axis(~ . / y_max * cr_max,
+                          name = "Violent Crime Rate (per 100k)",
+                          breaks = pretty_breaks())
+    ) +
+    scale_color_manual(values = c("Average Temperature (°C)" = cb_pal[1],
+                                  "Violent Crime Rate (per 100k)" = cb_pal[2])) +
+    labs(title = paste0(region_name, ": Temperature vs Violent Crime Rate over Time"),
+         subtitle = "Left axis: Temperature | Right axis: Violent Crime Rate",
+         x = "Year / Month", color = "") +
+    theme_minimal(base_size = 14) +
+    theme(legend.position = "bottom",
+          axis.title.y.right = element_text(color = cb_pal[2]))
+}
+
+# Render four regional charts
+plot_dualaxis("Taipei (North)")
+plot_dualaxis("Taichung (Central)")
+plot_dualaxis("Kaohsiung (South)")
+plot_dualaxis("Hualien (East)")
+```
+
+---
+
+# 5️⃣ Other Weather Variables vs Violent Crime Rate
+
+## 5.1 Average Humidity
+```{r humidity}
+# 5️⃣ Other Weather Variables vs Violent Crime Rate (Four Regions)
+# ================================================================
+
+# 共用繪圖函數：散點 + LOESS（四地混合）
+plot_weather_relation <- function(yvar, xlabel) {
+  ggplot(dat_reps, aes(x = .data[[yvar]], y = violent_crime_rate, color = region)) +
+    geom_point(alpha = 0.4) +
+    geom_smooth(method = "loess", se = TRUE, linewidth = 1.0) +
+    scale_color_manual(values = cb_pal[1:4]) +
+    scale_y_continuous(breaks = pretty_breaks(), limits = c(0, NA)) +
+    labs(
+      title = paste0("Violent Crime Rate vs ", xlabel, " (Four Regions)"),
+      subtitle = "Each point = monthly data (2002–2024)",
+      x = xlabel,
+      y = "Violent Crime Rate (per 100k)",
+      color = "Region"
+    ) +
+    theme_minimal(base_size = 14)
+}
+
+# 共用繪圖函數：分面圖（facet by region）
+plot_weather_facets <- function(yvar, xlabel) {
+  dat_reps %>%
+    ggplot(aes(x = .data[[yvar]], y = violent_crime_rate)) +
+    geom_point(alpha = 0.35, color = cb_pal[2]) +
+    geom_smooth(method = "loess", se = FALSE, color = cb_pal[2]) +
+    facet_wrap(~ region, scales = "free_y") +
+    scale_y_continuous(breaks = pretty_breaks(), limits = c(0, NA)) +
+    labs(
+      title = paste0(xlabel, " vs Violent Crime Rate (Facet by Region)"),
+      x = xlabel, y = "Violent Crime Rate (per 100k)"
+    ) +
+    theme_minimal(base_size = 12)
+}
+# === 平均溫度 ===
+plot_weather_relation("avg_temp", "Average Temperature (°C)")
+plot_weather_facets("avg_temp", "Average Temperature (°C)")
+# === 平均濕度 ===
+plot_weather_relation("avg_humidity", "Average Humidity (%)")
+plot_weather_facets("avg_humidity", "Average Humidity (%)")
+
+# === 日照時數 ===
+plot_weather_relation("sunshine_hours", "Sunshine Duration (hours)")
+plot_weather_facets("sunshine_hours", "Sunshine Duration (hours)")
+
+# === 降雨天數 ===
+plot_weather_relation("rainy_days", "Rainy Days (per month)")
+plot_weather_facets("rainy_days", "Rainy Days (per month)")
+```
