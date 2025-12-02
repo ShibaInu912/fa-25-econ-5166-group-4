@@ -10,3 +10,4 @@
     - 20251007: meeting 1 closed
     - 20251014: meeting 2 closed
     - 20251104: DA meeting 1 closed
+    - 20251111: meeting 3 closed
