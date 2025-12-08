@@ -25,6 +25,7 @@ See [ECON5166-期末專案的管理與交付規範](https://docs.google.com/docu
 | 蔡茜羽 | B10207071  | milkgreen2333  | DA   |
 
 
+
 ## Link to Meeting Note 
 [Link](url)
 Please create a Google Doc for meeting notes for your project. Please create a tab (named by date YYYYMMDD) for each meeting. [Meeting note template](https://docs.google.com/document/d/1vp1DItfbCN4shOsO1ZbVJf6z8bKySTxFDYsEbWRH10E/).
@@ -44,7 +45,13 @@ After the poster presentation, please highlight each member's key contribution t
 - `<Tidy up filenames and places>` [1](https://github.com/ShibaInu912/fa-25-econ-5166-group-4/commit/5e127d013fc17f64f9ab23bbb5508ba21c7f1224) [2](https://github.com/ShibaInu912/fa-25-econ-5166-group-4/commit/a8287f64149c62dbb64df834d622f4c2eb8822c7) [3](https://github.com/ShibaInu912/fa-25-econ-5166-group-4/commit/af1a34e9d0bb902d0e7c976ebaab0a206410a457) [4](https://github.com/ShibaInu912/fa-25-econ-5166-group-4/commit/407adb85c21c46ea963685fa5ed7f5622456903a) [5](https://github.com/ShibaInu912/fa-25-econ-5166-group-4/commit/5cf2cb1c714a6f2ab7c08c2952231272cd393e3c)
 - `<Summary statistics document for processed data>` [1](https://github.com/ShibaInu912/fa-25-econ-5166-group-4/commit/ae82cba0ad4c247a2177ae086e22b7f2f7d3783e) [2](https://github.com/ShibaInu912/fa-25-econ-5166-group-4/commit/8b91bcf0f23d905982fa696f9ff041d8e187c835) [3](https://github.com/ShibaInu912/fa-25-econ-5166-group-4/commit/3f81b48f68d90a2c50869e13749f73dac8ead268)
 
+**`<郭秉豐>`**'s contribution (My All commit: [Here](https://github.com/ShibaInu912/fa-25-econ-5166-group-4/commits/main/?author=windkuo1017))
+- **Collecting Raw data** 
+   - [[main-commit-1]](https://github.com/ShibaInu912/fa-25-econ-5166-group-4/commit/7290b9d68eafbc08cae7123de8b68de3582ebd3c)、[[2]](https://github.com/ShibaInu912/fa-25-econ-5166-group-4/commit/623f0c236af62ad5cd7250a2f11e406d955f638e)、[[3]](https://github.com/ShibaInu912/fa-25-econ-5166-group-4/commit/c7e89426d1bfeeaa074c5264fdc11516c55a581f)、[[4]](https://github.com/ShibaInu912/fa-25-econ-5166-group-4/commit/184355482f56e6f4ff5b8536931cc64dcd5744e6)、[[5]](https://github.com/ShibaInu912/fa-25-econ-5166-group-4/commit/31694b9149c1ea3e7e81f07eda1ce8c83dd8016c)
+   - The data was removed from Github though.
 
-**`<NAME>`**'s contribution
-- `<Contribution >` [see commit](url)
-- `<Contribution >` [see commit](url)
+- **Processing the data**
+   - [[main-commit-1]](https://github.com/ShibaInu912/fa-25-econ-5166-group-4/commit/1037982d44fbb244a51e31b4572c9e5ca3e87989)、[[2]](https://github.com/ShibaInu912/fa-25-econ-5166-group-4/commit/63c3f4281dba2fcda1c3d73e9df4a527db8c99c4)、[[3]](https://github.com/ShibaInu912/fa-25-econ-5166-group-4/commit/31694b9149c1ea3e7e81f07eda1ce8c83dd8016c)
+- **Notebook Written** 
+   - [[main-commit-1]](https://github.com/ShibaInu912/fa-25-econ-5166-group-4/commit/e5b6d77f3996cc21383c5120373c0f6f68c27335)、[[2]](https://github.com/ShibaInu912/fa-25-econ-5166-group-4/commit/4406643be14cdb55aacc78e9fd7923f26143b97f)、[[3]](https://github.com/ShibaInu912/fa-25-econ-5166-group-4/commit/5770e3dfadfa9ad33161e530a070cb1c0a7a9deb)
+   
